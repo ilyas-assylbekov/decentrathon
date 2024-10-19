@@ -37,11 +37,14 @@ const JobSearch = () => {
         return;
       }
 
+      console.log(resume);
+
       const formData = new FormData();
       formData.append('name', name);
       formData.append('position', job.title);
       formData.append('company', job.company);
       formData.append('resume', resume);
+      formData.append('userId', decodedToken.id);
 
       await axios.post('http://localhost:3000/apply', formData, {
         headers: {

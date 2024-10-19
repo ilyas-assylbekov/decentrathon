@@ -22,6 +22,7 @@ const CreateJob = () => {
 
     const decodedToken = jwtDecode(token);
     const name = decodedToken.name; // Adjust this line based on your token's structure
+    console.log('Name:', name);
 
     if (!name) {
       alert('Не удалось получить имя пользователя.');
