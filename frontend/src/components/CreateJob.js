@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 
 const CreateJob = () => {
   const [title, setTitle] = useState('');
@@ -13,7 +14,22 @@ const CreateJob = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const token = localStorage.getItem('accessToken'); // Adjust this line based on where you store the token
+    if (!token) {
+      alert('Вы не авторизованы.');
+      return;
+    }
+
+    const decodedToken = jwtDecode(token);
+    const name = decodedToken.name; // Adjust this line based on your token's structure
+
+    if (!name) {
+      alert('Не удалось получить имя пользователя.');
+      return;
+    }
+
     const jobData = {
+      name,
       title,
       description,
       requirements,
