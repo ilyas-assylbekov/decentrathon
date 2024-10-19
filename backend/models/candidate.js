@@ -21,6 +21,14 @@ module.exports = (sequelize, DataTypes) => {
           type: DataTypes.STRING,
           allowNull: true,
         },
+        userId: {
+          type: DataTypes.INTEGER,
+          allowNull: false,
+          references: {
+            model: 'Users', // Ensure this matches the table name
+            key: 'id',
+          },
+        },
       });
 
       return Candidate;

@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {jwtDecode} from 'jwt-decode';
+import Web3 from 'web3';
 
 const ManageCandidates = () => {
   const [candidates, setCandidates] = useState([]);
+  const [contract, setContract] = useState(null);
+  const [contractFile, setContractFile] = useState(null);
+  const [employeeAddress, setEmployeeAddress] = useState('');
+  const [accounts, setAccounts] = useState([]);
 
   useEffect(() => {
     const fetchCandidates = async () => {
@@ -36,7 +41,20 @@ const ManageCandidates = () => {
       }
     };
 
+    const fetchAccounts = async () => {
+      try {
+        console.log('Fetching accounts');
+        const web3 = new Web3('http://localhost:8545'); // Connect to Ganache
+        const accounts = await web3.eth.getAccounts();
+        setAccounts(accounts);
+        console.log('Accounts:', accounts);
+      } catch (error) {
+        console.error('Error fetching accounts:', error);
+      }
+    };
+
     fetchCandidates();
+    fetchAccounts();
   }, [setCandidates]);
 
   const handleStatusChange = async (id, newStatus) => {
@@ -60,6 +78,67 @@ const ManageCandidates = () => {
       console.error('Error updating candidate status:', error);
       alert('Ошибка при обновлении статуса кандидата.');
     }
+  };
+
+  const handleOfferContract = async (candidateId) => {
+    try {
+      const token = localStorage.getItem('accessToken'); // Adjust this line based on where you store the token
+      if (!token) {
+        console.error('No token found');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('candidateId', candidateId);
+      formData.append('employeeAddress', employeeAddress); // Add employee address
+      console.log(candidateId);
+      console.log(formData);
+      formData.append('contractFile', contractFile);
+      console.log(contractFile);
+      console.log(formData);
+
+      const response = await axios.post(`http://localhost:3000/contracts`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      setContract(response.data);
+      alert('Контракт предложен.');
+    } catch (error) {
+      console.error('Error offering contract:', error);
+      alert('Ошибка при предложении контракта.');
+    }
+  };
+
+  const handleSignContract = async (contractId) => {
+    try {
+      const token = localStorage.getItem('accessToken'); // Adjust this line based on where you store the token
+      if (!token) {
+        console.error('No token found');
+        return;
+      }
+
+      const decodedToken = jwtDecode(token);
+      const role = decodedToken.role; // Adjust this line based on your token's structure
+
+      const response = await axios.post(`http://localhost:3000/contracts/${contractId}/sign`, { role}, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      setContract(response.data);
+      alert('Контракт подписан.');
+    } catch (error) {
+      console.error('Error signing contract:', error);
+      alert('Ошибка при подписании контракта.');
+    }
+  };
+
+  const handleFileChange = (e) => {
+    setContractFile(e.target.files[0]);
   };
 
   const handleApply = async () => {
@@ -139,12 +218,35 @@ const ManageCandidates = () => {
                     <option value="Интервью назначено">Интервью назначено</option>
                     <option value="Отклонено">Отклонено</option>
                   </select>
+                  <input type="file" accept=".pdf" onChange={handleFileChange} className="mt-2" />
+                  <button
+                    onClick={() => handleOfferContract(candidate.id)}
+                    className="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                  >
+                    Предложить контракт
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {contract && (
+        <div className="mt-4">
+          <h3 className="text-xl font-bold mb-2">Контракт</h3>
+          <p>ID контракта: {contract.id}</p>
+          <p>Статус: {contract.status}</p>
+          <a href={`http://localhost:3000/${contract.contractFile}`} target="_blank" rel="noopener noreferrer">
+            Скачать контракт
+          </a>
+          <button
+            onClick={() => handleSignContract(contract.id)}
+            className="mt-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            Подписать контракт
+          </button>
+        </div>
+      )}
     </div>
   );
 };
