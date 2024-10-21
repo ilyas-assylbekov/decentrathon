@@ -19,7 +19,7 @@ const path = require('path');
 const Web3 = require('web3');
 const TruffleContract = require('@truffle/contract');
 const fs = require('fs');
-const telegramBot = require('./telegramBot'); // Include the Telegram bot
+//const telegramBot = require('./telegramBot'); // Include the Telegram bot
 
 const web3 = new Web3('http://localhost:8545'); // Connect to Ganache
 const EmploymentContractJSON = JSON.parse(fs.readFileSync(path.join(__dirname, '../build/contracts/EmploymentContract.json')));
@@ -183,7 +183,7 @@ app.post('/jobs', async (req, res) => {
     try {
       const { name, position, company, userId } = req.body;
       const resume = req.file ? path.join("uploads", req.file.filename) : null;
-      console.log('Applying for job:', position, 'at', company, 'with resume:', resume);
+      console.log('Applying for job:', position, 'at', company, 'with resume:', resume, 'for user:', userId);
       const newCandidate = await Candidate.create({ name, position, company, resume, status: 'На рассмотрении', userId: userId });
       res.status(201).json(newCandidate);
     } catch (error) {
